@@ -60,7 +60,7 @@ function ENT:SetSides(sides)
 	local shouldUpdatePhysmesh = self:GetSidesInternal() != sides
 	self:SetSidesInternal(math.Clamp(sides, 3, 100))
 	if shouldUpdatePhysmesh then self:UpdatePhysmesh() end
-	setDupeLink(self:GetCreator(), self, {Side = false})
+	setDupeLink(self:GetCreator(), self, {Side = sides})
 end
 
 -- custom size for portal
@@ -331,16 +331,16 @@ function ENT:UpdatePhysmesh()
 		local sizev = self:GetSize() * size_mult
 		local sides = self:GetSidesInternal()
 		local angMul, angRad = (360 / sides), (math.pi / 180)
-		local tiltAng = (sides % 4 != 0 and 0 or 45)
-		local degreeOffset = (sides * 90 + tiltAng) * angRad
+		local angPick = (sides % 4 != 0 and 0 or 45)
+		local degOffset = (sides * 90 + angPick) * angRad
 		for side = 1, sides do
-			local sidea = math.rad(side * angMul) + degreeOffset
-			local sidex = math.sin(sidea)
-			local sidey = math.cos(sidea)
+			local sidea = math.rad(side * angMul) + degOffset
+			local sidex, sidey = math.sin(sidea), math.cos(sidea)
 			local side1 = Vector(sidex, sidey, -1)
 			local side2 = Vector(sidex, sidey,  0)
-			table.insert(finalMesh, side1 * sizev)
-			table.insert(finalMesh, side2 * sizev)
+			side1:Mul(sizev); side2:Mul(sizev)
+			table.insert(finalMesh, side1)
+			table.insert(finalMesh, side2)
 		end
 		self:PhysicsInitConvex(finalMesh)
 		self:EnableCustomCollisions(true)
