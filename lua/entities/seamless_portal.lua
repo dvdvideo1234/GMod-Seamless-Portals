@@ -48,18 +48,18 @@ function ENT:LinkPortal(ent)
 end
 
 function ENT:UnlinkPortal()
-	local exitPortal = self:GetExitPortal()
-	if IsValid(exitPortal) then
-		exitPortal:SetExitPortal(nil)
+	local exit = self:GetExitPortal()
+	if IsValid(exit) then
+		exit:SetExitPortal(nil)
 	end
 	self:SetExitPortal(nil)
 	setDupeLink(self:GetCreator(), self, {Dest = false})
 end
 
 function ENT:SetSides(sides)
-	local shouldUpdatePhysmesh = self:GetSidesInternal() != sides
+	local umesh = (self:GetSidesInternal() != sides)
 	self:SetSidesInternal(math.Clamp(sides, 3, 100))
-	if shouldUpdatePhysmesh then self:UpdatePhysmesh() end
+	if umesh then self:UpdatePhysmesh() end
 	setDupeLink(self:GetCreator(), self, {Side = sides})
 end
 
