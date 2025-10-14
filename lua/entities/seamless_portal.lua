@@ -44,7 +44,7 @@ function ENT:LinkPortal(ent)
 	if !IsValid(ent) then return end
 	self:SetExitPortal(ent)
 	ent:SetExitPortal(self)
-	setDupeLink(self:GetCreator(), self, {Sors = self:EntIndex(), Dest = ent:EntIndex()})
+	setDupeLink(self:GetCreator(), self, {Dest = ent:EntIndex()})
 end
 
 function ENT:UnlinkPortal()
@@ -53,19 +53,25 @@ function ENT:UnlinkPortal()
 		exitPortal:SetExitPortal(nil)
 	end
 	self:SetExitPortal(nil)
-	setDupeLink(self:GetCreator(), self, {Sors = false, Dest = false})
+	setDupeLink(self:GetCreator(), self, {Dest = false})
 end
 
 function ENT:SetSides(sides)
 	local shouldUpdatePhysmesh = self:GetSidesInternal() != sides
 	self:SetSidesInternal(math.Clamp(sides, 3, 100))
 	if shouldUpdatePhysmesh then self:UpdatePhysmesh() end
+	setDupeLink(self:GetCreator(), self, {Side = false})
 end
 
 -- custom size for portal
 function ENT:SetSize(n)
 	self:SetSizeInternal(n)
 	self:UpdatePhysmesh(n)
+	setDupeLink(self:GetCreator(), self, {Size = n})
+end
+
+function ENT:GetSize()
+	return self:GetSizeInternal()
 end
 
 function ENT:SetRemoveExit(bool)
@@ -77,10 +83,6 @@ function ENT:GetRemoveExit(bool)
 	return self.PORTAL_REMOVE_EXIT
 end
 
-function ENT:GetSize()
-	return self:GetSizeInternal()
-end
-
 local outputs = {
 	["OnTeleportFrom"] = true,
 	["OnTeleportTo"]   = true
@@ -90,22 +92,28 @@ if SERVER then
 
 	function ENT:PostEntityPaste(ply, ent, cre)
 		if not IsValid(ply) then return end
-		for key, ent in pairs(cre) do
 			-- Validate dupe data table
-			local link = ent.PORTAL_DUPE_LINK
-			if not link then break end
-			-- Check source portal
-			if not link.Sors then break end
-			local sors = cre[link.Sors]
-			if not IsValid(sors) then break end
-			-- Check destination portal
-			if not link.Dest then break end
+		local link = ent.PORTAL_DUPE_LINK
+		if not link then return end
+		-- Check destination portal
+		if link.Dest then
 			local dest = cre[link.Dest]
-			if not IsValid(dest) then break end
-			-- Create link and load remove exit
-			sors:LinkPortal(dest)
-			sors:SetRemoveExit(tobool(link.Reme))
+			if IsValid(dest) then
+				self:LinkPortal(dest)
+			else
+				self:UnlinkPortal(dest)
+			end
 		end
+		-- Check portal sides
+		if link.Side then
+			self:SetSides(link.Side)
+		end
+		-- Check portal size
+		if link.Size then
+			self:SetSize(link.Size)
+		end
+		-- Create link and load remove exit
+		self:SetRemoveExit(tobool(link.Reme))
 	end
 
 	function ENT:KeyValue(key, value)
@@ -223,10 +231,9 @@ if CLIENT then
 		}
 	end
 
+	local cam, render = cam, render
 	function ENT:Draw()
 		if halo.RenderedEntity() == self then return end
-		local render = render
-		local cam = cam
 		local size = self:GetSize()
 		-- Render the outside frame
 		local portalSize = size * size_mult
@@ -323,10 +330,11 @@ function ENT:UpdatePhysmesh()
 		local finalMesh = {}
 		local sizev = self:GetSize() * size_mult
 		local sides = self:GetSidesInternal()
-		local angleMul = 360 / sides
-		local degreeOffset = (sides * 90 + (sides % 4 != 0 and 0 or 45)) * (math.pi / 180)
+		local angMul, angRad = (360 / sides), (math.pi / 180)
+		local tiltAng = (sides % 4 != 0 and 0 or 45)
+		local degreeOffset = (sides * 90 + tiltAng) * angRad
 		for side = 1, sides do
-			local sidea = math.rad(side * angleMul) + degreeOffset
+			local sidea = math.rad(side * angMul) + degreeOffset
 			local sidex = math.sin(sidea)
 			local sidey = math.cos(sidea)
 			local side1 = Vector(sidex, sidey, -1)
