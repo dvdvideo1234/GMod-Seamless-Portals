@@ -64,10 +64,10 @@ function ENT:SetSides(sides)
 end
 
 -- custom size for portal
-function ENT:SetSize(n)
-	self:SetSizeInternal(n)
-	self:UpdatePhysmesh(n)
-	setDupeLink(self:GetCreator(), self, {Size = n})
+function ENT:SetSize(v)
+	self:SetSizeInternal(v)
+	self:UpdatePhysmesh(v)
+	setDupeLink(self:GetCreator(), self, {Size = v})
 end
 
 function ENT:GetSize()
