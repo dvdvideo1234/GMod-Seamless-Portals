@@ -101,7 +101,7 @@ if SERVER then
 			if IsValid(dest) then
 				self:LinkPortal(dest)
 			else
-				self:UnlinkPortal(dest)
+				self:UnlinkPortal()
 			end
 		end
 		-- Check portal sides
