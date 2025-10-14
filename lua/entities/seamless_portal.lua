@@ -93,7 +93,7 @@ if SERVER then
 	function ENT:PostEntityPaste(ply, ent, cre)
 		if not IsValid(ply) then return end
 			-- Validate dupe data table
-		local link = ent.PORTAL_DUPE_LINK
+		local link = self.PORTAL_DUPE_LINK
 		if not link then return end
 		-- Check destination portal
 		if link.Dest then
