@@ -508,7 +508,7 @@ if CLIENT then
 	local rendering = false
 	local mirrored = false
 	function SeamlessPortals.ToggleMirror(enable)
-		if enable == nil then return mirrored end -- 2024 mee here: what the fuck is this
+		if enable == nil then return mirrored end -- 2024 Mee here: what the fuck is this
 		mirrored = enable
 
 		if (!enable) then
@@ -519,7 +519,7 @@ if CLIENT then
 			return mirrored
 		end
 
-		hook.Add("PreDrawViewModels", "FlippedWorld", function(_, sky, sky3d)
+		hook.Add("PreDrawViewModels", "FlippedWorld", function()
 			render.UpdateScreenEffectTexture()
 			render.DrawTextureToScreenRect(render.GetScreenEffectTexture(), ScrW(), 0, -ScrW(), ScrH())
 
