@@ -327,11 +327,11 @@ function ENT:UpdatePhysmesh()
 	local phys = self:GetPhysicsObject()
 	if phys:IsValid() then
 		local finalMesh = {}
+		local angMul = (360 / sides)
 		local sizev = self:GetSize() * size_mult
 		local sides = self:GetSidesInternal()
-		local angMul, angRad = (360 / sides), (math.pi / 180)
 		local angPick = (sides % 4 != 0 and 0 or 45)
-		local degOffset = (sides * 90 + angPick) * angRad
+		local degOffset =  math.rad(sides * 90 + angPick)
 		for side = 1, sides do
 			local sidea = math.rad(side * angMul) + degOffset
 			local sidex, sidey = math.sin(sidea), math.cos(sidea)
@@ -436,14 +436,14 @@ if CLIENT then
 		if !SeamlessPortals.PortalMeshes[sides] then
 			SeamlessPortals.PortalMeshes[sides] = {Mesh(), Mesh()}
 
-			local meshTable = {}
-			local invMeshTable = {}
-			local angleMul = 360 / sides
-			local degreeOffset = (sides * 90 + (sides % 4 != 0 and 0 or 45)) * (math.pi / 180)
+			local meshTable, invMeshTable = {}, {}
+			local angMul = (360 / sides)
+			local angPick = (sides % 4 != 0 and 0 or 45)
+			local degOffset = math.rad(sides * 90 + angPick)
 			for side = 1, sides do
 				local side1 = Vector(0, 0, -1)
-				local sidex = math.rad(side * angleMul) + degreeOffset
-				local sidey = math.rad((side + 1) * angleMul) + degreeOffset
+				local sidex = math.rad(side * angMul) + degOffset
+				local sidey = math.rad((side + 1) * angMul) + degOffset
 				local side2 = Vector(math.sin(sidex), math.cos(sidex), -1)
 				local side3 = Vector(math.sin(sidey), math.cos(sidey), -1)
 
