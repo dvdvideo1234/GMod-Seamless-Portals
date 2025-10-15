@@ -100,8 +100,6 @@ if SERVER then
 			local dest = cre[link.Dest]
 			if IsValid(dest) then
 				self:LinkPortal(dest)
-			else
-				self:UnlinkPortal()
 			end
 		end
 		-- Check portal sides
