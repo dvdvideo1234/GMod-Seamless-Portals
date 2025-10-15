@@ -324,7 +324,8 @@ end
 -- Scale the phys mesh
 function ENT:UpdatePhysmesh()
 	self:PhysicsInit(6)
-	if self:GetPhysicsObject():IsValid() then
+	local phys = self:GetPhysicsObject()
+	if phys:IsValid() then
 		local finalMesh = {}
 		local sizev = self:GetSize() * size_mult
 		local sides = self:GetSidesInternal()
@@ -342,9 +343,9 @@ function ENT:UpdatePhysmesh()
 		end
 		self:PhysicsInitConvex(finalMesh)
 		self:EnableCustomCollisions(true)
-		self:GetPhysicsObject():EnableMotion(false)
-		self:GetPhysicsObject():SetMaterial("glass")
-		self:GetPhysicsObject():SetMass(250)
+		phys:EnableMotion(false)
+		phys:SetMaterial("glass")
+		phys:SetMass(250)
 	else
 		self:PhysicsDestroy()
 		self:EnableCustomCollisions(false)
