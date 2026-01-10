@@ -1,4 +1,4 @@
-@PointClass base(Targetname, Angles, GMODSandbox) iconsprite("editor/info_target.vmt") = seamless_portal : "Create a seamless portal"
+@PointClass base(Targetname, Parentname, Angles) studio("models/editor/cone_helper.mdl") line(100 100 255, targetname, link) = seamless_portal : "Create a seamless portal"
 [
 	size(vector)				: "Portal Size" : "100 100 8" : "Portal size in hammer units."
 	link(target_destination)	: "Linked Portal" : "" : "Another seamless portal entity to link to."
@@ -7,6 +7,12 @@
 		0: "On"
 		1: "Off"
 	]
+	gmod_allowphysgun(choices)	: "Allow Physics Gun" : 1 : "If set, players cannot use Physics Gun on this entity." =
+	[
+		0: "No"
+		1: "Yes"
+	]
+	gmod_allowtools(string)		: "Sandbox Tool Whitelist" : "" : "If set, only given tools can be used on this entity.\nYou need to supply the tool class names, the names of the .lua files of those tools.\nThis also includes the context menu properties!"
 
 	// Inputs
 	input Link(target_destination) : "Links a new portal. (Empty parameter will unlink the portal)"
