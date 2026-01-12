@@ -4,39 +4,46 @@ if CLIENT then timer.Simple(0, function()
   local all = effects.GetList() or {}
   local eff = all["ToolTracer"]
 
-  if eff then
-    -- keep the old Render if you want to call it
-    SeamlessPortals.ToolTraceRender = eff.Render
+  -- General effect rendering function
+  local function DoEffectRender(self)
+    if ( self.Alpha < 1 ) then return end
 
-    eff.Render = function(self)
-      if ( self.Alpha < 1 ) then return end
+    render.SetMaterial( self.Mat )
+    local texcoord = math.Rand( 0, 1 )
 
-      render.SetMaterial( self.Mat )
-      local texcoord = math.Rand( 0, 1 )
+    local norm = ( self.StartPos - self.EndPos ) * self.Life
 
-      local norm = ( self.StartPos - self.EndPos ) * self.Life
+    self.Length = norm:Length()
 
-      self.Length = norm:Length()
+    for i = 1, 3 do
 
-      for i = 1, 3 do
-
-        render.DrawBeam( self.StartPos - norm,    -- Start
-              self.EndPos,          -- End
-              8,                -- Width
-              texcoord,           -- Start tex coordinate
-              texcoord + self.Length / 128, -- End tex coordinate
-              color_white )         -- Color (optional)
-      end
-
-      render.DrawBeam( self.StartPos,
-              self.EndPos,
-              8,
-              texcoord,
-              texcoord + ( ( self.StartPos - self.EndPos ):Length() / 128 ),
-              Color( 255, 255, 255, 128 * ( 1 - self.Life ) ) )
-      -- Optionally call SeamlessPortals.ToolTraceRender(self) here if needed
+      render.DrawBeam( self.StartPos - norm,
+            self.EndPos,
+            8,
+            texcoord,
+            texcoord + self.Length / 128,
+            color_white )
     end
 
+    render.DrawBeam( self.StartPos,
+            self.EndPos,
+            8,
+            texcoord,
+            texcoord + ( ( self.StartPos - self.EndPos ):Length() / 128 ),
+            Color( 255, 255, 255, 128 * ( 1 - self.Life ) ) )
+  end
+
+  if eff then
+    -- Keep the old Render if you want to call it
+    SeamlessPortals.ToolTraceEffRender = eff.Render
+
+    -- Override the tool trace render with the new routine
+    eff.Render = DoEffectRender
+
+    -- Optionally call SeamlessPortals.ToolTraceEffRender(self) here if needed
+
+    -- Print the initialized effect status
+    print("Tool trace override [eff]:", DoEffectRender)
   else
     -- Fallback: register a full effect if ToolTracer does not exist yet
     local EFFECT = {}
@@ -61,35 +68,13 @@ if CLIENT then timer.Simple(0, function()
       return self.Life < 1
     end
 
-    function EFFECT:Render()
-      if ( self.Alpha < 1 ) then return end
-
-      render.SetMaterial( self.Mat )
-      local texcoord = math.Rand( 0, 1 )
-
-      local norm = ( self.StartPos - self.EndPos ) * self.Life
-
-      self.Length = norm:Length()
-
-      for i = 1, 3 do
-
-        render.DrawBeam( self.StartPos - norm,    -- Start
-              self.EndPos,          -- End
-              8,                -- Width
-              texcoord,           -- Start tex coordinate
-              texcoord + self.Length / 128, -- End tex coordinate
-              color_white )         -- Color (optional)
-      end
-
-      render.DrawBeam( self.StartPos,
-              self.EndPos,
-              8,
-              texcoord,
-              texcoord + ( ( self.StartPos - self.EndPos ):Length() / 128 ),
-              Color( 255, 255, 255, 128 * ( 1 - self.Life ) ) )
-    end
+    -- Override the tool trace render with the new routine
+    EFFECT.Render = DoEffectRender
 
     effects.Register(EFFECT, "ToolTracer")
+
+    -- Print the initialized effect status
+    print("Tool trace override [new]:", DoEffectRender)
   end
 
 
