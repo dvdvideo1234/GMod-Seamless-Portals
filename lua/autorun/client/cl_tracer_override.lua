@@ -3,34 +3,82 @@ SeamlessPortals = SeamlessPortals or {}
 if CLIENT then timer.Simple(0, function()
   local all = effects.GetList() or {}
   local eff = all["ToolTracer"]
+  local bck = Color( 255, 255, 255, 255)
+
+  local function DrawBeam(vStr, vEnd, nLife)
+    local aim = (vStr - vEnd)
+    local alen = aim:Length()
+    local norm = (aim * nLife)
+    local nlen = (alen * nLife)
+    local ncor = math.Rand( 0, 1 )
+          bck.a = 128 * (1 - nLife)
+
+    for i = 1, 3 do
+      render.DrawBeam(vStr - norm,
+            vEnd,
+            8,
+            ncor,
+            ncor + (nlen / 128),
+            color_white )
+    end
+
+    render.DrawBeam(vStr,
+            vEnd,
+            8,
+            ncor,
+            ncor + (alen / 128),
+            bck)
+  end
+
+  tP = {["seamless_portal"] = true}
+  local function GetPair(ent)
+    if(not IsValid(ent)) then return end
+    if(not tP[ent:GetClass()]) then return end
+    local out = ent:GetExitPortal()
+    if(not IsValid(out)) then return end
+    if(not tP[out:GetClass()]) then return end
+    return ent, out
+  end
 
   -- General effect rendering function
   local function DoEffectRender(self)
     if ( self.Alpha < 1 ) then return end
-
     render.SetMaterial( self.Mat )
-    local texcoord = math.Rand( 0, 1 )
+    local user = LocalPlayer()
+    local vs = self.StartPos
+    local ve = self.EndPos
+    local lf, to = self.Life, {}
 
-    local norm = ( self.StartPos - self.EndPos ) * self.Life
+    local tr = SeamlessPortals.TraceLine({
+      start = vs,
+      endpos = vs + user:GetAimVector() * 10000,
+      filter = user,
+      output = to
+    })
 
-    self.Length = norm:Length()
-
-    for i = 1, 3 do
-
-      render.DrawBeam( self.StartPos - norm,
-            self.EndPos,
-            8,
-            texcoord,
-            texcoord + self.Length / 128,
-            color_white )
+    local ent, out = GetPair(tr.Entity)
+    if(ent and out) then
+      local cnt = 0
+      local as, ae = user:EyeAngles(), nil
+      local ps, pe = Vector(vs), Vector(tr.HitPos)
+      while(ent and out) do
+        DrawBeam(ps, pe, lf)
+        pe, ae = SeamlessPortals.TransformPortal(ent, out, ps, as)
+        local tr = SeamlessPortals.TraceLine({
+          start = pe,
+          endpos = pe + ae:Forward() * 10000,
+          filter = {ent, out},
+          output = to
+        })
+        ps, as = pe, ae; pe = tr.HitPos
+        ent, out = GetPair(tr.Entity)
+        cnt = cnt + 1
+        if(cnt > 100) then return end
+      end
+      DrawBeam(ps, ve, lf)
+    else
+      DrawBeam(vs, ve, lf)
     end
-
-    render.DrawBeam( self.StartPos,
-            self.EndPos,
-            8,
-            texcoord,
-            texcoord + ( ( self.StartPos - self.EndPos ):Length() / 128 ),
-            Color( 255, 255, 255, 128 * ( 1 - self.Life ) ) )
   end
 
   if eff then
