@@ -30,13 +30,13 @@ if CLIENT then timer.Simple(0, function()
             bck)
   end
 
-  tP = {["seamless_portal"] = true}
+  local seamless = {["seamless_portal"] = true}
   local function GetPair(ent)
     if(not IsValid(ent)) then return end
-    if(not tP[ent:GetClass()]) then return end
+    if(not seamless[ent:GetClass()]) then return end
     local out = ent:GetExitPortal()
     if(not IsValid(out)) then return end
-    if(not tP[out:GetClass()]) then return end
+    if(not seamless[out:GetClass()]) then return end
     return ent, out
   end
 
@@ -48,33 +48,39 @@ if CLIENT then timer.Simple(0, function()
     local vs = self.StartPos
     local ve = self.EndPos
     local lf, to = self.Life, {}
-
+    -- Do a regular trace to hit the portal
     local tr = SeamlessPortals.TraceLine({
       start = vs,
       endpos = vs + user:GetAimVector() * 10000,
       filter = user,
       output = to
     })
-
+    -- Check the linked pair
     local ent, out = GetPair(tr.Entity)
     if(ent and out) then
-      local cnt = 0
-      local as, ae = user:EyeAngles(), nil
+      local cnt = 0 -- Infinite loop prevension
+      local as, ae = user:EyeAngles(), user:EyeAngles()
       local ps, pe = Vector(vs), Vector(tr.HitPos)
-      while(ent and out) do
-        DrawBeam(ps, pe, lf)
-        pe, ae = SeamlessPortals.TransformPortal(ent, out, ps, as)
+      while(ent and out) do --Trace hits a linked pair
+        DrawBeam(ps, pe, lf) -- Draw a section of the beam
+        -- Transform end coords of the section to find the next pair
+        ps, as = SeamlessPortals.TransformPortal(ent, out, pe, ae)
+        -- Trace out from the exit portal (out)
         local tr = SeamlessPortals.TraceLine({
-          start = pe,
-          endpos = pe + ae:Forward() * 10000,
-          filter = {ent, out},
+          start = ps,
+          endpos = ps + as:Forward() * 10000,
+          filter = {ent, out, user},
           output = to
         })
-        ps, as = pe, ae; pe = tr.HitPos
+        -- Update the end location after the trace
+        pe:Set(tr.HitPos)
+        ae:Set(as)
+        -- If we hit a portal pair continue
         ent, out = GetPair(tr.Entity)
         cnt = cnt + 1
         if(cnt > 100) then return end
       end
+      -- Make sure to draw the last pair
       DrawBeam(ps, ve, lf)
     else
       DrawBeam(vs, ve, lf)
